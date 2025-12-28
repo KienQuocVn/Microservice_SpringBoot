@@ -1,0 +1,63 @@
+server:
+  port: 8888
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Identity Service
+        - id: identity_service
+          uri: http://identity-service:8080
+          predicates:
+            - Path=/api/v1/identity/**
+          filters:
+            - StripPrefix=2
+
+        # Profile Service
+        - id: profile_service
+          uri: http://profile-service:8080
+          predicates:
+            - Path=/api/v1/profile/**
+          filters:
+            - StripPrefix=2
+
+        # Notification Service
+        - id: notification_service
+          uri: http://notification-service:8080
+          predicates:
+            - Path=/api/v1/notification/**
+          filters:
+            - StripPrefix=2
+
+        # Post Service
+        - id: post_service
+          uri: http://post-service:8080
+          predicates:
+            - Path=/api/v1/post/**
+          filters:
+            - StripPrefix=2
+
+        # File Service
+        - id: file_service
+          uri: http://file-service:8080
+          predicates:
+            - Path=/api/v1/file/**
+          filters:
+            - StripPrefix=2
+
+        # Chat Service
+        - id: chat_service
+          uri: http://chat-service:8080
+          predicates:
+            - Path=/api/v1/chat/**
+          filters:
+            - StripPrefix=2
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+

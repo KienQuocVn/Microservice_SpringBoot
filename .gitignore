@@ -1,0 +1,114 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Maven
+target/
+.mvn/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.asc
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/wrapper/maven-wrapper.properties
+
+# Compiled classes
+*.class
+*.ctxt
+.mtj.tmp/
+*.jar
+*.nar
+*.zip
+*.tar.gz
+*.rar
+
+# Package Files
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# IDE
+.idea/
+*.iws
+*.iml
+*.ipr
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# IDE - IntelliJ
+out/
+
+# IDE - VS Code
+.vscode/
+.history/
+
+# Spring Boot
+spring-boot-devtools.properties
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+npm-lock.yaml
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Application properties
+application-local.yaml
+application-prod.yaml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# OS
+.DS_Store
+Thumbs.db
+.directory
+
+# Docker
+docker-compose.override.yml
+
+# Build artifacts
+dist/
+build/
+
+# React
+web-app/build/
+web-app/npm-debug.log
+web-app/.env.local
+web-app/.env.development.local
+web-app/.env.test.local
+web-app/.env.production.local
+
+# Cache
+.cache/
+cache/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# Coverage
+coverage/
+.nyc_output/
+

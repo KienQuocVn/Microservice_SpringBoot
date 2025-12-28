@@ -1,0 +1,59 @@
+server:
+  port: 8888  # Port của API Gateway
+
+app:
+  api-prefix: /api/v1  # Prefix chung cho tất cả API
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        # Route cho Identity Service - xử lý authentication, user management
+        - id: identity_service
+          uri: http://localhost:8080  # URL của Identity Service
+          predicates:
+            - Path=${app.api-prefix}/identity/**  # Match với /api/v1/identity/**
+          filters:
+            - StripPrefix=2  # Bỏ 2 prefix đầu (/api/v1) trước khi forward request
+
+        # Route cho Profile Service - quản lý thông tin profile user
+        - id: profile_service
+          uri: http://localhost:8081
+          predicates:
+            - Path=${app.api-prefix}/profile/users/**
+          filters:
+            - StripPrefix=2
+
+        # Route cho Notification Service - gửi email, push notification
+        - id: notification_service
+          uri: http://localhost:8082
+          predicates:
+            - Path=${app.api-prefix}/notification/**
+          filters:
+            - StripPrefix=2
+
+        # Route cho Post Service - quản lý bài viết, social features
+        - id: post_service
+          uri: http://localhost:8083
+          predicates:
+            - Path=${app.api-prefix}/post/**
+          filters:
+            - StripPrefix=2
+
+        # Route cho File Service - upload/download file, media
+        - id: file_service
+          uri: http://localhost:8084
+          predicates:
+            - Path=${app.api-prefix}/file/**
+          filters:
+            - StripPrefix=2
+
+        # Route cho Chat Service - messaging, real-time chat
+        - id: chat_service
+          uri: http://localhost:8085
+          predicates:
+            - Path=${app.api-prefix}/chat/**
+          filters:
+            - StripPrefix=2

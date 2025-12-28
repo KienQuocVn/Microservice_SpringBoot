@@ -1,0 +1,23 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /file
+
+spring:
+  application:
+    name: file-service
+  datasource:
+    url: "jdbc:mysql://mysql:3306/book_file"
+    driverClassName: "com.mysql.cj.jdbc.Driver"
+    username: root
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  kafka:
+    bootstrap-servers: kafka:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+

@@ -1,0 +1,18 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /chat
+
+spring:
+  application:
+    name: chat-service
+  data:
+    mongodb:
+      uri: mongodb://root:root@mongodb:27017/chat-service?authSource=admin
+      auto-index-creation: true
+
+app:
+  services:
+    profile:
+      url: http://profile-service:8080/profile
+
