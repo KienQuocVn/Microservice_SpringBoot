@@ -7,15 +7,18 @@ Hướng dẫn test các API của microservices.
 ## 🛠️ Công Cụ
 
 ### Sử dụng cURL (Command Line)
+
 ```powershell
 curl http://localhost:8080/identity/health
 ```
 
 ### Sử dụng Postman/Insomnia
+
 - Import collection từ Swagger docs
 - Test requests trực tiếp
 
 ### Sử dụng Swagger UI
+
 ```
 http://localhost:8080/identity/swagger-ui.html
 ```
@@ -52,25 +55,37 @@ curl http://localhost:8082/notification/actuator/health
 ### Identity Service APIs
 
 ```powershell
-# Register user
-curl -X POST http://localhost:8888/api/v1/identity/register \
+# Register user (public endpoint - no auth required)
+curl -X POST http://localhost:8888/api/v1/identity/users/registration \
   -H "Content-Type: application/json" \
   -d '{
     "username": "user1",
     "email": "user1@example.com",
-    "password": "password123"
+    "password": "password123",
+    "firstName": "John",
+    "lastName": "Doe",
+    "dob": "1990-01-01",
+    "city": "Ho Chi Minh"
   }'
 
-# Login
-curl -X POST http://localhost:8888/api/v1/identity/login \
+# Login to get JWT token (public endpoint - no auth required)
+curl -X POST http://localhost:8888/api/v1/identity/auth/token \
   -H "Content-Type: application/json" \
   -d '{
     "username": "user1",
     "password": "password123"
   }'
 
-# Get user info
-curl http://localhost:8888/api/v1/identity/users/1 \
+# Response will be:
+# {
+#   "code": 1000,
+#   "result": {
+#     "token": "eyJhbGciOiJIUzUxMiJ9..."
+#   }
+# }
+
+# Get my info (requires authentication)
+curl http://localhost:8888/api/v1/identity/users/my-info \
   -H "Authorization: Bearer <token>"
 ```
 
@@ -94,27 +109,50 @@ curl http://localhost:8888/api/v1/profile/users/1/recommendations
 
 ### Post Service APIs
 
+**⚠️ Tất cả các endpoint của Post Service đều yêu cầu authentication (JWT token)**
+
 ```powershell
-# Create post
-curl -X POST http://localhost:8888/api/v1/post/posts \
-  -H "Content-Type: application/json" \
+# Step 1: Đăng nhập để lấy JWT token (nếu chưa có)
+$loginResponse = curl -X POST http://localhost:8888/api/v1/identity/auth/token `
+  -H "Content-Type: application/json" `
   -d '{
-    "title": "Great book",
-    "content": "This book is amazing",
-    "authorId": 1
+    "username": "user1",
+    "password": "password123"
+  }' | ConvertFrom-Json
+
+# Extract token từ response
+$token = $loginResponse.result.token
+Write-Host "Token: $token"
+
+# Step 2: Tạo post mới (yêu cầu authentication)
+curl -X POST http://localhost:8888/api/v1/post/create `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer $token" `
+  -d '{
+    "content": "This book is amazing! Highly recommend it."
   }'
 
-# Get all posts
-curl http://localhost:8888/api/v1/post/posts
+# Step 3: Lấy danh sách bài viết của tôi (yêu cầu authentication)
+# Endpoint: GET /api/v1/post/my-posts?page=1&size=2
+curl -X GET "http://localhost:8888/api/v1/post/my-posts?page=1&size=2" `
+  -H "Authorization: Bearer $token"
 
-# Get post by ID
-curl http://localhost:8888/api/v1/post/posts/1
-
-# Like post
-curl -X POST http://localhost:8888/api/v1/post/posts/1/like \
-  -H "Content-Type: application/json" \
-  -d '{"userId": 1}'
+# Hoặc sử dụng PowerShell với biến token:
+curl -X GET "http://localhost:8888/api/v1/post/my-posts?page=1&size=2" `
+  -H "Authorization: Bearer $token"
 ```
+
+**Lưu ý quan trọng:**
+
+- Endpoint `/api/v1/post/my-posts` **BẮT BUỘC** phải có header `Authorization: Bearer <token>`
+- Token phải được lấy từ endpoint `/api/v1/identity/auth/token` sau khi đăng nhập
+- Nếu không có token hoặc token không hợp lệ, sẽ nhận được lỗi:
+  ```json
+  {
+    "code": 1401,
+    "message": "Unauthenticated"
+  }
+  ```
 
 ### File Service APIs
 
@@ -187,18 +225,19 @@ $registerResponse = curl -X POST http://localhost:8888/api/v1/identity/register 
 
 echo "Registered: $registerResponse"
 
-# 2. Login
-$loginResponse = curl -X POST http://localhost:8888/api/v1/identity/login \
-  -H "Content-Type: application/json" \
+# 2. Login để lấy JWT token
+$loginResponse = curl -X POST http://localhost:8888/api/v1/identity/auth/token `
+  -H "Content-Type: application/json" `
   -d '{
     "username": "testuser",
     "password": "Test123!"
-  }' -s
+  }' | ConvertFrom-Json
 
-echo "Login response: $loginResponse"
+Write-Host "Login response: $loginResponse"
 
-# Extract token (depends on response format)
-# $token = $loginResponse | ConvertFrom-Json | Select-Object -ExpandProperty token
+# Extract token từ response
+$token = $loginResponse.result.token
+Write-Host "Token: $token"
 
 # 3. Update profile
 curl -X PUT http://localhost:8888/api/v1/profile/users/1 \
@@ -210,13 +249,16 @@ curl -X PUT http://localhost:8888/api/v1/profile/users/1 \
   }' -s
 
 # 4. Create post
-curl -X POST http://localhost:8888/api/v1/post/posts \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer $token" \
+curl -X POST http://localhost:8888/api/v1/post/create `
+  -H "Content-Type: application/json" `
+  -H "Authorization: Bearer $token" `
   -d '{
-    "title": "My Favorite Book",
     "content": "Just finished an amazing book!"
-  }' -s
+  }'
+
+# 5. Get my posts
+curl -X GET "http://localhost:8888/api/v1/post/my-posts?page=1&size=2" `
+  -H "Authorization: Bearer $token"
 
 # 5. Like post
 curl -X POST http://localhost:8888/api/v1/post/posts/1/like \
@@ -324,4 +366,3 @@ docker exec identity-service tcpdump -i eth0
 ---
 
 **Happy Testing! 🚀**
-
