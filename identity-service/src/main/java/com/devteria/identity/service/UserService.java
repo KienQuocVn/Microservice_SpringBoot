@@ -44,12 +44,12 @@ public class UserService {
     KafkaTemplate<String, Object> kafkaTemplate;
 
     public UserResponse createUser(UserCreationRequest request) {
+        //Identity
         User user = userMapper.toUser(request);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+
         HashSet<Role> roles = new HashSet<>();
-
         roleRepository.findById(PredefinedRole.USER_ROLE).ifPresent(roles::add);
-
         user.setRoles(roles);
         user.setEmailVerified(false);
 
@@ -59,20 +59,21 @@ public class UserService {
             throw new AppException(ErrorCode.USER_EXISTED);
         }
 
+        //Send request to profile service
         var profileRequest = profileMapper.toProfileCreationRequest(request);
         profileRequest.setUserId(user.getId());
 
-        var profile = profileClient.createProfile(profileRequest);
+        var profile = profileClient.createProfile(profileRequest); //call profile service to create profile
 
         NotificationEvent notificationEvent = NotificationEvent.builder()
                 .channel("EMAIL")
                 .recipient(request.getEmail())
-                .subject("Welcome to book")
+                .subject("Welcome to social")
                 .body("Hello, " + request.getUsername())
                 .build();
 
-        // Publish message to kafka
-        kafkaTemplate.send("notification-delivery", notificationEvent);
+
+        kafkaTemplate.send("notification-delivery", notificationEvent);// Publish message to kafka
 
         var userCreationReponse = userMapper.toUserResponse(user);
         userCreationReponse.setId(profile.getResult().getId());
